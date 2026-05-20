@@ -1,19 +1,33 @@
-from utils.database import load_anime_data
+from telegram import Update
 
-anime_data = load_anime_data()
+from telegram.ext import (
+    ContextTypes
+)
 
-async def button_callback(update, context):
+from utils.database import (
+    get_anime_by_title
+)
+
+
+async def button_handler(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    if not update.callback_query:
+        return
+
     query = update.callback_query
+
+    if not query.message:
+        return
+
     await query.answer()
 
     anime_title = query.data
 
-    anime = next(
-        (
-            a for a in anime_data
-            if a["title"] == anime_title
-        ),
-        None
+    anime = get_anime_by_title(
+        anime_title
     )
 
     if not anime:
@@ -22,16 +36,28 @@ async def button_callback(update, context):
     caption = f"""
 🐥 {anime['title']} | MM Subbed |
 
-Genres - {anime['genres']}
-Studio - {anime['studio']}
-Episodes - {anime['episodes']}
+🤩 - - - - | • | - - - - 🤩
 
 🔗 Link Collection:
 {anime['link']}
 """
 
-    with open(anime["photo"], "rb") as photo:
-        await query.message.reply_photo(
-            photo=photo,
-            caption=caption
+    try:
+
+        with open(anime["photo"], "rb") as photo:
+
+            await context.bot.send_photo(
+                chat_id=query.message.chat.id,
+                photo=photo,
+                caption=caption
+            )
+
+    except FileNotFoundError:
+
+        await context.bot.send_message(
+            chat_id=query.message.chat.id,
+            text=caption
         )
+
+    # Delete search result buttons
+    await query.message.delete()
