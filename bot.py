@@ -1,3 +1,5 @@
+import logging
+from pathlib import Path
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -20,6 +22,36 @@ from handlers.callbacks import (
     button_handler
 )
 
+
+
+# Create logs folder
+Path("logs").mkdir(
+    exist_ok=True
+)
+
+# Logging setup
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler(
+            "logs/bot.log",
+            encoding="utf-8"
+        ),
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger(__name__)
+# =========================
+# GLOBAL ERROR HANDLER
+# =========================
+async def error_handler(update, context):
+
+    logger.error(
+        msg="Exception while handling update:",
+        exc_info=context.error
+    )
 
 def main():
 

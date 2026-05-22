@@ -1,6 +1,12 @@
 import sqlite3
+import logging
+
+logger = logging.getLogger(__name__)
 
 
+# =========================
+# DB CONNECTION
+# =========================
 def get_db_connection():
 
     conn = sqlite3.connect("anime.db")
@@ -10,31 +16,53 @@ def get_db_connection():
     return conn
 
 
+# =========================
+# GET ALL ANIME
+# =========================
 def get_all_anime():
 
-    conn = get_db_connection()
+    try:
 
-    anime_list = conn.execute(
-        "SELECT * FROM anime"
-    ).fetchall()
+        conn = get_db_connection()
 
-    conn.close()
+        anime_list = conn.execute(
+            "SELECT * FROM anime"
+        ).fetchall()
 
-    return anime_list
+        conn.close()
+
+        return [dict(anime) for anime in anime_list]
+
+    except Exception as e:
+
+        logger.error(f"Database error: {e}")
+
+        return []
 
 
-def get_anime_by_title(title):
+# =========================
+# GET ANIME BY ID
+# =========================
+def get_anime_by_id(anime_id: int):
 
-    conn = get_db_connection()
+    try:
 
-    anime = conn.execute(
-        "SELECT * FROM anime WHERE title = ?",
-        (title,)
-    ).fetchone()
+        conn = get_db_connection()
 
-    conn.close()
+        anime = conn.execute(
+            "SELECT * FROM anime WHERE id = ?",
+            (anime_id,)
+        ).fetchone()
 
-    if anime:
-        return dict(anime)
+        conn.close()
 
-    return None
+        if anime:
+            return dict(anime)
+
+        return None
+
+    except Exception as e:
+
+        logger.error(f"Database error: {e}")
+
+        return None

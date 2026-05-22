@@ -58,7 +58,7 @@ async def search_handler(
         keyboard.append([
             InlineKeyboardButton(
                 anime["title"],
-                callback_data=anime["title"]
+                callback_data=f"anime_{anime['id']}"
             )
         ])
 
@@ -106,7 +106,7 @@ async def inline_query(
         articles.append(
 
             InlineQueryResultArticle(
-                id=anime["title"],
+                id=str(anime["id"]),
                 title=anime["title"],
 
                 input_message_content=InputTextMessageContent(
