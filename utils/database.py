@@ -1,6 +1,8 @@
 import sqlite3
 import logging
-
+from utils.aliases import (
+    generate_aliases
+)
 logger = logging.getLogger(__name__)
 
 
@@ -66,3 +68,53 @@ def get_anime_by_id(anime_id: int):
         logger.error(f"Database error: {e}")
 
         return None
+    
+# =========================
+# ADD ANIME
+# =========================
+def add_anime(
+    title,
+    link,
+    photo_file_id
+):
+
+    try:
+
+        conn = get_db_connection()
+
+        # Generate automatic aliases
+        aliases = generate_aliases(
+            title
+        )
+
+        conn.execute(
+            """
+            INSERT INTO anime (
+                title,
+                aliases,
+                link,
+                photo_file_id
+            )
+            VALUES (?, ?, ?, ?)
+            """,
+            (
+                title,
+                aliases,
+                link,
+                photo_file_id
+            )
+        )
+
+        conn.commit()
+
+        conn.close()
+
+        logger.info(
+            f"Added anime: {title}"
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"Failed to add anime: {e}"
+        )

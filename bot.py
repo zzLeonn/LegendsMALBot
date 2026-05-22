@@ -30,6 +30,9 @@ from handlers.callbacks import (
 from handlers.list_anime import (
     list_handler
 )
+from handlers.add_anime import (
+    addanime_handler
+)
 
 
 # =========================
@@ -109,6 +112,9 @@ def main():
             "fileid",
             get_file_id
         )
+    )
+    app.add_handler(
+        addanime_handler
     )
 
     # =========================

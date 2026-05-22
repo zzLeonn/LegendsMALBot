@@ -7,7 +7,12 @@ from utils.database import (
 )
 
 
-def search_anime(query):
+# =========================
+# SEARCH ANIME
+# =========================
+def search_anime(
+    query
+):
 
     anime_rows = get_all_anime()
 
@@ -18,20 +23,38 @@ def search_anime(query):
         anime_dict = dict(anime)
 
         # Main title
-        choices[anime_dict["title"]] = anime_dict
+        choices[
+            anime_dict["title"]
+        ] = anime_dict
 
         # Aliases
-        aliases = json.loads(
-            anime_dict["aliases"]
+        aliases_raw = anime_dict.get(
+            "aliases"
         )
 
-        for alias in aliases:
+        if aliases_raw:
 
-            choices[alias] = anime_dict
+            try:
 
-    # Fuzzy search
+                aliases = json.loads(
+                    aliases_raw
+                )
+
+            except Exception:
+
+                aliases = []
+
+            for alias in aliases:
+
+                choices[
+                    alias
+                ] = anime_dict
+
+    # =========================
+    # FUZZY SEARCH
+    # =========================
     results = process.extract(
-        query,
+        query.lower(),
         choices.keys(),
         limit=5,
         score_cutoff=50
@@ -43,13 +66,18 @@ def search_anime(query):
 
     for result in results:
 
-        anime = choices[result[0]]
+        anime = choices[
+            result[0]
+        ]
 
-        # Prevent duplicates
         if anime["title"] not in added:
 
-            final_results.append(anime)
+            final_results.append(
+                anime
+            )
 
-            added.add(anime["title"])
+            added.add(
+                anime["title"]
+            )
 
     return final_results
