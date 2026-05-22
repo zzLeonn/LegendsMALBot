@@ -10,7 +10,9 @@ from telegram.ext import (
     ContextTypes
 )
 
-from utils.fuzzy_search import search_anime
+from utils.fuzzy_search import (
+    search_anime
+)
 
 
 # =========================
@@ -32,10 +34,13 @@ async def search_handler(
 
         return
 
+    # Combine arguments
     query = " ".join(context.args)
 
+    # Search anime
     results = search_anime(query)
 
+    # No results
     if not results:
 
         await update.message.reply_text(
@@ -44,6 +49,7 @@ async def search_handler(
 
         return
 
+    # Create buttons
     keyboard = []
 
     for anime in results:
@@ -55,8 +61,11 @@ async def search_handler(
             )
         ])
 
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(
+        keyboard
+    )
 
+    # Send results
     await update.message.reply_text(
         "🔍 Search Results",
         reply_markup=reply_markup,
@@ -75,11 +84,14 @@ async def inline_query(
     if not update.inline_query:
         return
 
-    query = update.inline_query.query.strip()
+    query = (
+        update.inline_query.query or ""
+    ).strip()
 
     if not query:
         return
 
+    # Search anime
     results = search_anime(query)
 
     articles = []
@@ -96,7 +108,10 @@ async def inline_query(
         articles.append(
 
             InlineQueryResultArticle(
-                id=str(anime["id"]),
+
+                id=str(
+                    anime["id"]
+                ),
 
                 title=anime["title"],
 
@@ -105,12 +120,14 @@ async def inline_query(
                 input_message_content=InputTextMessageContent(
                     caption
                 )
+
             )
 
         )
 
+    # Send inline results
     await update.inline_query.answer(
-        articles,
+        results=articles,
         cache_time=1,
         is_personal=True
     )
