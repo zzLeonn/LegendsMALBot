@@ -21,7 +21,9 @@ from handlers.search import (
 from handlers.callbacks import (
     button_handler
 )
-
+from handlers.list_anime import (
+    list_handler
+)
 
 
 # Create logs folder
@@ -72,6 +74,13 @@ def main():
         CommandHandler(
             "search",
             search_handler
+        )
+    )
+    
+    app.add_handler(
+         CommandHandler(
+            "list",
+            list_handler
         )
     )
 

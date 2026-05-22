@@ -7,11 +7,16 @@ from telegram.ext import (
 )
 
 from utils.database import (
+    get_all_anime,
     get_anime_by_id
 )
 
 from utils.send_anime import (
     send_anime
+)
+
+from handlers.list_anime import (
+    build_list_keyboard
 )
 
 logger = logging.getLogger(__name__)
@@ -54,7 +59,49 @@ async def button_handler(
     if not data:
         return
 
-    # Validate callback format
+    # =========================
+    # LIST PAGINATION
+    # =========================
+    if data.startswith("list_"):
+
+        try:
+
+            page = int(
+                data.split("_")[1]
+            )
+
+        except (
+            ValueError,
+            IndexError
+        ):
+
+            return
+
+        anime_list = get_all_anime()
+
+        reply_markup = build_list_keyboard(
+            anime_list,
+            page
+        )
+
+        try:
+
+            await query.edit_message_text(
+                "📚 Available Anime",
+                reply_markup=reply_markup
+            )
+
+        except Exception as e:
+
+            logger.warning(
+                f"Failed to edit list page: {e}"
+            )
+
+        return
+
+    # =========================
+    # ANIME BUTTONS
+    # =========================
     if not data.startswith("anime_"):
 
         logger.warning(
@@ -89,11 +136,24 @@ async def button_handler(
     # Anime not found
     if not anime:
 
-        await query.message.reply_text(
+        await query.edit_message_text(
             "❌ Anime not found."
         )
 
         return
+
+    # Show loading instantly
+    try:
+
+        await query.edit_message_text(
+            f"⏳ Loading {anime['title']}..."
+        )
+
+    except Exception as e:
+
+        logger.warning(
+            f"Failed to edit loading message: {e}"
+        )
 
     # Send anime
     await send_anime(
@@ -102,7 +162,7 @@ async def button_handler(
         anime=anime
     )
 
-    # Delete old search message safely
+    # Remove loading message
     try:
 
         await query.message.delete()
@@ -110,5 +170,5 @@ async def button_handler(
     except Exception as e:
 
         logger.warning(
-            f"Failed to delete message: {e}"
+            f"Failed to delete loading message: {e}"
         )
