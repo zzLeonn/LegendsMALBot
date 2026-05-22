@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -13,6 +14,10 @@ from handlers.start import (
     start_handler
 )
 
+from handlers.fileid import (
+    get_file_id
+)
+
 from handlers.search import (
     search_handler,
     inline_query
@@ -21,17 +26,23 @@ from handlers.search import (
 from handlers.callbacks import (
     button_handler
 )
+
 from handlers.list_anime import (
     list_handler
 )
 
 
-# Create logs folder
+# =========================
+# CREATE LOGS FOLDER
+# =========================
 Path("logs").mkdir(
     exist_ok=True
 )
 
-# Logging setup
+
+# =========================
+# LOGGING SETUP
+# =========================
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -45,6 +56,8 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+
 # =========================
 # GLOBAL ERROR HANDLER
 # =========================
@@ -55,6 +68,10 @@ async def error_handler(update, context):
         exc_info=context.error
     )
 
+
+# =========================
+# MAIN FUNCTION
+# =========================
 def main():
 
     app = (
@@ -63,6 +80,9 @@ def main():
         .build()
     )
 
+    # =========================
+    # COMMAND HANDLERS
+    # =========================
     app.add_handler(
         CommandHandler(
             "start",
@@ -76,30 +96,56 @@ def main():
             search_handler
         )
     )
-    
+
     app.add_handler(
-         CommandHandler(
+        CommandHandler(
             "list",
             list_handler
         )
     )
 
     app.add_handler(
+        CommandHandler(
+            "fileid",
+            get_file_id
+        )
+    )
+
+    # =========================
+    # INLINE QUERY HANDLER
+    # =========================
+    app.add_handler(
         InlineQueryHandler(
             inline_query
         )
     )
 
+    # =========================
+    # CALLBACK BUTTON HANDLER
+    # =========================
     app.add_handler(
         CallbackQueryHandler(
             button_handler
         )
     )
 
+    # =========================
+    # ERROR HANDLER
+    # =========================
+    app.add_error_handler(
+        error_handler
+    )
+
     print("Bot is running...")
 
+    # =========================
+    # START BOT
+    # =========================
     app.run_polling()
 
 
+# =========================
+# RUN BOT
+# =========================
 if __name__ == "__main__":
     main()
