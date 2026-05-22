@@ -11,13 +11,14 @@ logger = logging.getLogger(__name__)
 # =========================
 def get_db_connection():
 
-    conn = sqlite3.connect("anime.db")
+    conn = sqlite3.connect(
+        "anime.db",
+        timeout=10
+    )
 
     conn.row_factory = sqlite3.Row
 
     return conn
-
-
 # =========================
 # GET ALL ANIME
 # =========================
@@ -75,14 +76,17 @@ def get_anime_by_id(anime_id: int):
 def add_anime(
     title,
     link,
-    photo_file_id
+    photo_file_id,
+    photo
 ):
+
+    conn = None
 
     try:
 
         conn = get_db_connection()
 
-        # Generate automatic aliases
+        # Generate aliases automatically
         aliases = generate_aliases(
             title
         )
@@ -92,22 +96,22 @@ def add_anime(
             INSERT INTO anime (
                 title,
                 aliases,
+                photo,
                 link,
                 photo_file_id
             )
-            VALUES (?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?)
             """,
             (
                 title,
                 aliases,
+                photo,
                 link,
                 photo_file_id
             )
         )
 
         conn.commit()
-
-        conn.close()
 
         logger.info(
             f"Added anime: {title}"
@@ -118,3 +122,8 @@ def add_anime(
         logger.error(
             f"Failed to add anime: {e}"
         )
+
+    finally:
+
+        if conn:
+            conn.close()

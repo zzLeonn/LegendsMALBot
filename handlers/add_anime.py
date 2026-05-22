@@ -1,24 +1,50 @@
-from telegram import Update
+import os
+
+from telegram import (
+    Update,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup
+)
 
 from telegram.ext import (
     ContextTypes,
     ConversationHandler,
     CommandHandler,
     MessageHandler,
+    CallbackQueryHandler,
     filters
 )
 
 from config import ADMIN_IDS
-
-from utils.database import (
-    add_anime
-)
+from utils.database import add_anime
 
 
 # =========================
 # STATES
 # =========================
-TITLE, LINK, PHOTO = range(3)
+TITLE, LINK, PHOTO, PHOTO_NAME = range(4)
+
+
+# =========================
+# IMAGE SAVE PATH
+# =========================
+IMAGE_FOLDER = r"E:\vscode projects\LegendsMALBot\images"
+
+# Create folder automatically
+os.makedirs(IMAGE_FOLDER, exist_ok=True)
+
+
+# =========================
+# CANCEL KEYBOARD
+# =========================
+cancel_keyboard = InlineKeyboardMarkup([
+    [
+        InlineKeyboardButton(
+            "❌ Cancel",
+            callback_data="cancel_addanime"
+        )
+    ]
+])
 
 
 # =========================
@@ -47,7 +73,8 @@ async def addanime_start(
         return ConversationHandler.END
 
     await update.message.reply_text(
-        "🎬 Send anime title"
+        "🎬 Send anime title",
+        reply_markup=cancel_keyboard
     )
 
     return TITLE
@@ -68,11 +95,12 @@ async def get_title(
         return ConversationHandler.END
 
     context.user_data["title"] = (
-        update.message.text
+        (update.message.text or "").strip()
     )
 
     await update.message.reply_text(
-        "🔗 Send anime link collection"
+        "🔗 Send anime link collection",
+        reply_markup=cancel_keyboard
     )
 
     return LINK
@@ -93,11 +121,12 @@ async def get_link(
         return ConversationHandler.END
 
     context.user_data["link"] = (
-        update.message.text
+        (update.message.text or "").strip()
     )
 
     await update.message.reply_text(
-        "🖼 Send anime thumbnail photo"
+        "🖼 Send anime thumbnail photo",
+        reply_markup=cancel_keyboard
     )
 
     return PHOTO
@@ -117,18 +146,78 @@ async def get_photo(
     if context.user_data is None:
         return ConversationHandler.END
 
-    if not update.message.photo:
+    # Handle normal photo
+    if update.message.photo:
+
+        photo = update.message.photo[-1]
+
+        context.user_data["photo_file_id"] = (
+            photo.file_id
+        )
+
+    # Handle image document
+    elif (
+        update.message.document
+        and update.message.document.mime_type
+        and update.message.document.mime_type.startswith("image/")
+    ):
+
+        context.user_data["photo_file_id"] = (
+            update.message.document.file_id
+        )
+
+    else:
 
         await update.message.reply_text(
-            "❌ Please send a photo."
+            "❌ Please send an image.",
+            reply_markup=cancel_keyboard
         )
 
         return PHOTO
 
-    # Highest quality photo
-    photo = update.message.photo[-1]
+    await update.message.reply_text(
+        "📝 Send image filename\n\nExample:\nnaruto.jpg",
+        reply_markup=cancel_keyboard
+    )
 
-    photo_file_id = photo.file_id
+    return PHOTO_NAME
+
+
+# =========================
+# PHOTO NAME
+# =========================
+async def get_photo_name(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    if not update.message:
+        return PHOTO_NAME
+
+    if context.user_data is None:
+        return ConversationHandler.END
+
+    photo_name = (
+        (update.message.text or "").strip()
+    )
+
+    # Invalid Windows filename chars
+    invalid_chars = r'<>:"/\|?*'
+
+    for char in invalid_chars:
+        photo_name = photo_name.replace(
+            char,
+            "_"
+        )
+
+    # Add extension automatically
+    if not (
+        photo_name.endswith(".jpg")
+        or photo_name.endswith(".png")
+        or photo_name.endswith(".jpeg")
+        or photo_name.endswith(".webp")
+    ):
+        photo_name += ".jpg"
 
     title = context.user_data.get(
         "title"
@@ -138,36 +227,96 @@ async def get_photo(
         "link"
     )
 
-    # Safety checks
-    if not title or not link:
+    photo_file_id = context.user_data.get(
+        "photo_file_id"
+    )
+
+    # Missing data check
+    if not title or not link or not photo_file_id:
 
         await update.message.reply_text(
             "❌ Missing anime data."
         )
 
-        context.user_data.clear()
+        if context.user_data:
+            context.user_data.clear()
 
         return ConversationHandler.END
+
+    # Full save path
+    save_path = os.path.join(
+        IMAGE_FOLDER,
+        photo_name
+    )
+
+    # Prevent overwrite
+    if os.path.exists(save_path):
+
+        await update.message.reply_text(
+            "❌ File already exists.\nChoose another filename."
+        )
+
+        return PHOTO_NAME
+
+    try:
+
+        # Get Telegram file
+        tg_file = await context.bot.get_file(
+            photo_file_id
+        )
+
+        # Download locally
+        await tg_file.download_to_drive(
+            save_path
+        )
+
+    except Exception as e:
+
+        await update.message.reply_text(
+            f"❌ Failed to save image.\n\n{e}"
+        )
+
+        if context.user_data:
+            context.user_data.clear()
+
+        return ConversationHandler.END
+
+    # Database image path
+    db_photo_path = f"images/{photo_name}"
 
     # Save anime to database
     add_anime(
         title=title,
         link=link,
-        photo_file_id=photo_file_id
+        photo=db_photo_path,
+        photo_file_id=photo_file_id,
+        
     )
 
     await update.message.reply_text(
-        f"✅ Anime added successfully\n\n🎬 {title}"
+        f"""
+✅ Anime added successfully
+
+🎬 Title:
+{title}
+
+🖼 Image Saved:
+{save_path}
+
+📂 Database Path:
+{db_photo_path}
+"""
     )
 
-    # Clear temp data
-    context.user_data.clear()
+    # Clear temporary data
+    if context.user_data:
+        context.user_data.clear()
 
     return ConversationHandler.END
 
 
 # =========================
-# CANCEL
+# CANCEL COMMAND
 # =========================
 async def cancel(
     update: Update,
@@ -182,6 +331,31 @@ async def cancel(
 
     if context.user_data:
         context.user_data.clear()
+
+    return ConversationHandler.END
+
+
+# =========================
+# CANCEL BUTTON
+# =========================
+async def cancel_button(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    query = update.callback_query
+
+    if not query:
+        return ConversationHandler.END
+
+    await query.answer()
+
+    if context.user_data:
+        context.user_data.clear()
+
+    # Delete message
+    if query.message:
+        await query.message.delete()
 
     return ConversationHandler.END
 
@@ -223,8 +397,20 @@ addanime_handler = ConversationHandler(
         PHOTO: [
 
             MessageHandler(
-                filters.PHOTO,
+                (
+                    filters.PHOTO
+                    | filters.Document.IMAGE
+                ),
                 get_photo
+            )
+
+        ],
+
+        PHOTO_NAME: [
+
+            MessageHandler(
+                filters.TEXT & ~filters.COMMAND,
+                get_photo_name
             )
 
         ]
@@ -236,6 +422,11 @@ addanime_handler = ConversationHandler(
         CommandHandler(
             "cancel",
             cancel
+        ),
+
+        CallbackQueryHandler(
+            cancel_button,
+            pattern="^cancel_addanime$"
         )
 
     ]

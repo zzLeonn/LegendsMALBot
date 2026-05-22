@@ -2,9 +2,7 @@ import json
 
 from rapidfuzz import process
 
-from utils.database import (
-    get_all_anime
-)
+from utils.database import get_all_anime
 
 
 # =========================
