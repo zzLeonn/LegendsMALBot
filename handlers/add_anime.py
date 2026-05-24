@@ -28,7 +28,7 @@ TITLE, LINK, PHOTO, PHOTO_NAME = range(4)
 # =========================
 # IMAGE SAVE PATH
 # =========================
-IMAGE_FOLDER = r"E:\vscode projects\LegendsMALBot\images"
+IMAGE_FOLDER = r"\LegendsMALBot\images"
 
 # Create folder automatically
 os.makedirs(IMAGE_FOLDER, exist_ok=True)
