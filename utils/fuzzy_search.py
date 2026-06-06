@@ -1,4 +1,5 @@
 import json
+from random import choices
 
 from rapidfuzz import process
 
@@ -54,28 +55,30 @@ def search_anime(
     results = process.extract(
         query.lower(),
         choices.keys(),
-        limit=5,
+        limit=15,
         score_cutoff=50
     )
 
     final_results = []
-
     added = set()
 
     for result in results:
 
-        anime = choices[
-            result[0]
-        ]
+        anime = choices[result[0]]
 
         if anime["title"] not in added:
 
-            final_results.append(
-                anime
-            )
+          final_results.append(anime)
 
-            added.add(
-                anime["title"]
-            )
+        added.add(anime["title"])
+
+    query_lower = query.lower().strip()
+
+    final_results.sort(
+    key=lambda anime: (
+        anime["title"].lower() != query_lower,
+        anime["title"].lower()
+    )
+)
 
     return final_results

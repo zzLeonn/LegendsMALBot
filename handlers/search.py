@@ -91,41 +91,49 @@ async def inline_query(
     if not query:
         return
 
-    # Search anime
     results = search_anime(query)
 
     articles = []
 
     for anime in results:
 
-        caption = f"""
-🐥 {anime['title']} | MM Subbed |
+        message_text = (
+            f" ▶ <b>{anime['title']}</b>\n\n"
+            f"🔗 <b>Link Collection</b>\n"
+            f"{anime['link']}"
+        )
 
-🔗 Link Collection:
-{anime['link']}
-"""
+        keyboard = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton(
+                    "📺 Open Collection",
+                    url=anime["link"]
+                )
+            ]
+        ])
 
         articles.append(
 
             InlineQueryResultArticle(
 
-                id=str(
-                    anime["id"]
-                ),
+                id=str(anime["id"]),
 
-                title=anime["title"],
+                title=f"🎬 {anime['title']}",
 
-                description="Anime Link Collection",
+                description="🇲🇲 Myanmar Subbed Anime",
 
-                input_message_content=InputTextMessageContent(
-                    caption
+                reply_markup=keyboard,
+
+                input_message_content=
+                InputTextMessageContent(
+                    message_text,
+                    parse_mode="HTML"
                 )
 
             )
 
         )
 
-    # Send inline results
     await update.inline_query.answer(
         results=articles,
         cache_time=1,
