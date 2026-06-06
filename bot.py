@@ -1,5 +1,13 @@
 import logging
 from pathlib import Path
+from warnings import filterwarnings
+from telegram.warnings import PTBUserWarning
+
+filterwarnings(
+    action="ignore",
+    message=r".*per_message=False.*",
+    category=PTBUserWarning,
+)
 
 from telegram.ext import (
     Application,
