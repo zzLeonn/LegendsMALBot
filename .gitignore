@@ -1,22 +1,62 @@
-# Environment variables
+# ==========================================
+# Environment Variables & Secrets
+# ==========================================
 .env
+.env.*
+!.env.example
 
-# Python cache
+# ==========================================
+# Python Cache & Compiled Files
+# ==========================================
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 
-# VS Code settings
-.vscode/
+# ==========================================
+# Virtual Environments
+# ==========================================
+venv/
+.venv/
+env/
+ENV/
 
-# SQLite temporary files
-*.db-journal
 
-# OS files
-.DS_Store
-Thumbs.db
 
+# ==========================================
 # Logs
+# ==========================================
 logs/
 *.log
-logs/bot.log
-logs/bot.log
+
+# ==========================================
+# IDE & Editor Files
+# ==========================================
+.vscode/
+.idea/
+
+# ==========================================
+# Operating System Files
+# ==========================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==========================================
+# Testing & Coverage
+# ==========================================
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ==========================================
+# Build Files
+# ==========================================
+build/
+dist/
+*.egg-info/
+
+# ==========================================
+# Misc
+# ==========================================
+*.bak
+*.tmp
