@@ -76,7 +76,7 @@ https://t.me/+dKZL1b8ZWMU5ZjBl
         keyboard
     )
 
-    with open("start_banner.jpg", "rb") as photo:
+    with open("images/start_banner.jpg", "rb") as photo:
 
         await update.message.reply_photo(
             photo=photo,

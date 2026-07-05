@@ -1,0 +1,12 @@
+services:
+  bot:
+    build: .
+
+    env_file:
+      - .env
+
+    volumes:
+      - ./anime.db:/app/anime.db
+      - ./logs:/app/logs
+
+    restart: unless-stopped
