@@ -1,10 +1,12 @@
+
 __pycache__/
 *.pyc
-
 .vscode/
-
-.git
+.git/
 .gitignore
-
-logs/
+.env
+.env.*
 *.log
+logs/
+anime.db-shm
+anime.db-wal
