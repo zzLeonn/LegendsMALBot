@@ -1,6 +1,12 @@
 import logging
 from pathlib import Path
+import sys
 from warnings import filterwarnings
+
+# Add project root to Python's module search path
+ROOT_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT_DIR))
+
 from telegram.warnings import PTBUserWarning
 
 filterwarnings(
