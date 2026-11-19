@@ -6,7 +6,7 @@ services:
       - .env
 
     volumes:
-      - ./anime.db:/app/anime.db
+      - ./data/anime.db:/app/data/anime.db
       - ./logs:/app/logs
 
     restart: unless-stopped

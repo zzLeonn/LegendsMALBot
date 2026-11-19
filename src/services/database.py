@@ -1,9 +1,13 @@
 import sqlite3
 import logging
-from utils.aliases import (
+from pathlib import Path
+from src.services.aliases import (
     generate_aliases
 )
 logger = logging.getLogger(__name__)
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DATABASE_PATH = PROJECT_ROOT / "data" / "anime.db"
 
 
 # =========================
@@ -12,7 +16,7 @@ logger = logging.getLogger(__name__)
 def get_db_connection():
 
     conn = sqlite3.connect(
-        "anime.db",
+        DATABASE_PATH,
         timeout=10
     )
 
@@ -122,6 +126,7 @@ def add_anime(
         logger.error(
             f"Failed to add anime: {e}"
         )
+        raise
 
     finally:
 

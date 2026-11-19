@@ -6,16 +6,16 @@ from telegram.ext import (
     ContextTypes
 )
 
-from utils.database import (
+from src.services.database import (
     get_all_anime,
     get_anime_by_id
 )
 
-from utils.send_anime import (
+from src.services.send_anime import (
     send_anime
 )
 
-from handlers.list_anime import (
+from src.handlers.list_anime import (
     build_list_keyboard
 )
 

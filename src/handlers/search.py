@@ -1,18 +1,24 @@
+import logging
+
 from telegram import (
     Update,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     InlineQueryResultArticle,
+    InlineQueryResultCachedPhoto,
     InputTextMessageContent
 )
 
 from telegram.ext import (
     ContextTypes
 )
+from telegram.error import BadRequest
 
-from utils.fuzzy_search import (
+from src.services.fuzzy_search import (
     search_anime
 )
+
+logger = logging.getLogger(__name__)
 
 
 # =========================
@@ -94,11 +100,12 @@ async def inline_query(
     results = search_anime(query)
 
     articles = []
+    fallback_articles = []
 
     for anime in results:
 
         message_text = (
-            f" ▶ <b>{anime['title']}</b>\n\n"
+            f"🎬 <b>{anime['title']}</b>\n\n"
             f"🔗 <b>Link Collection</b>\n"
             f"{anime['link']}"
         )
@@ -112,30 +119,68 @@ async def inline_query(
             ]
         ])
 
-        articles.append(
-
+        fallback_articles.append(
             InlineQueryResultArticle(
-
                 id=str(anime["id"]),
-
-                title=f"🎬 {anime['title']}",
-
+                title=anime["title"],
                 description="🇲🇲 Myanmar Subbed Anime",
-
                 reply_markup=keyboard,
-
-                input_message_content=
-                InputTextMessageContent(
+                input_message_content=InputTextMessageContent(
                     message_text,
                     parse_mode="HTML"
                 )
-
             )
-
         )
 
-    await update.inline_query.answer(
-        results=articles,
-        cache_time=1,
-        is_personal=True
-    )
+        photo_file_id = anime.get("photo_file_id")
+
+        if photo_file_id:
+            articles.append(
+                InlineQueryResultCachedPhoto(
+                    id=str(anime["id"]),
+                    photo_file_id=photo_file_id,
+                    title=anime["title"],
+                    description="🇲🇲 Myanmar Subbed Anime",
+                    caption=message_text,
+                    parse_mode="HTML",
+                    reply_markup=keyboard
+                )
+            )
+        else:
+            articles.append(
+                InlineQueryResultArticle(
+                    id=str(anime["id"]),
+                    title=anime["title"],
+                    description="🇲🇲 Myanmar Subbed Anime",
+                    reply_markup=keyboard,
+                    input_message_content=InputTextMessageContent(
+                        message_text,
+                        parse_mode="HTML"
+                    )
+                )
+            )
+
+    try:
+        await update.inline_query.answer(
+            results=articles,
+            cache_time=1,
+            is_personal=True
+        )
+    except BadRequest as error:
+        error_message = str(error).casefold()
+
+        if (
+            "wrong remote file identifier" not in error_message
+            and "can't unserialize it" not in error_message
+        ):
+            raise
+
+        logger.warning(
+            "Cached photo ID was rejected; retrying inline search without photos: %s",
+            error
+        )
+        await update.inline_query.answer(
+            results=fallback_articles,
+            cache_time=1,
+            is_personal=True
+        )

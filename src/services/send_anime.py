@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from telegram.ext import (
     ContextTypes
@@ -8,9 +9,7 @@ from telegram.ext import (
 # =========================
 # BASE IMAGE PATH
 # =========================
-BASE_IMAGE_PATH = (
-    r"E:\vscode projects\LegendsMALBot"
-)
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 # =========================
@@ -61,10 +60,12 @@ async def send_anime(
 
     if photo_path:
 
-        full_path = os.path.join(
-            BASE_IMAGE_PATH,
-            photo_path
+        normalized_photo_path = (
+            Path("assets") / photo_path
+            if photo_path.startswith("images/")
+            else Path(photo_path)
         )
+        full_path = PROJECT_ROOT / normalized_photo_path
 
         if os.path.exists(full_path):
 

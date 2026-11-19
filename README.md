@@ -16,6 +16,8 @@ A Telegram anime bot built with Python and SQLite, featuring fast anime search, 
 |----------|-------------|
 | /start | Start the bot |
 | /search | Search for an anime |
+| /addanime | Add an anime (admin only) |
+| /checkphotos | Check stored photo IDs (admin only) |
 | Inline Mode | Search directly from any chat |
 
 ## Installation
@@ -42,7 +44,7 @@ BOT_TOKEN=your_bot_token
 4. Run the bot
 
 ```bash
-python bot.py
+python -m src.bot
 ```
 
 ## Requirements
@@ -50,6 +52,21 @@ python bot.py
 - Python 3.10+
 - python-telegram-bot v22+
 - SQLite
+
+## Project Structure
+
+```text
+src/
+  bot.py             # Application entry point
+  config.py          # Environment configuration
+  handlers/          # Telegram command and callback handlers
+  services/          # Database, search, and sending services
+data/
+  anime.db           # SQLite database
+assets/
+  images/            # Anime and bot images
+logs/                # Runtime logs
+```
 
 ## Disclaimer
 

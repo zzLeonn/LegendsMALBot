@@ -16,29 +16,32 @@ from telegram.ext import (
     InlineQueryHandler
 )
 
-from config import BOT_TOKEN
+from src.config import BOT_TOKEN
 
-from handlers.start import (
+from src.handlers.start import (
     start_handler
 )
 
-from handlers.fileid import (
+from src.handlers.fileid import (
     get_file_id
 )
 
-from handlers.search import (
+from src.handlers.search import (
     search_handler,
     inline_query
 )
 
-from handlers.callbacks import (
+from src.handlers.callbacks import (
     button_handler
 )
 
-from handlers.list_anime import (
+from src.handlers.list_anime import (
     list_handler
 )
-from handlers.add_anime import (
+from src.handlers.check_photos import (
+    check_photos_handler
+)
+from src.handlers.add_anime import (
     addanime_handler
 )
 
@@ -112,6 +115,13 @@ def main():
         CommandHandler(
             "list",
             list_handler
+        )
+    )
+
+    app.add_handler(
+        CommandHandler(
+            "checkphotos",
+            check_photos_handler
         )
     )
 

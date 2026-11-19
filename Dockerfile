@@ -13,4 +13,4 @@ COPY . .
 RUN mkdir -p logs
 
 # Run bot
-CMD ["python", "bot.py"]
+CMD ["python", "-m", "src.bot"]

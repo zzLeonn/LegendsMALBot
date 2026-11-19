@@ -8,7 +8,7 @@ from telegram.ext import (
     ContextTypes
 )
 
-from utils.database import (
+from src.services.database import (
     get_all_anime
 )
 

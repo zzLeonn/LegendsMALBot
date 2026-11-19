@@ -1,4 +1,6 @@
 import os
+import sqlite3
+from pathlib import Path
 
 from telegram import (
     Update,
@@ -15,8 +17,8 @@ from telegram.ext import (
     filters
 )
 
-from config import ADMIN_IDS
-from utils.database import add_anime
+from src.config import ADMIN_IDS
+from src.services.database import add_anime
 
 
 # =========================
@@ -28,7 +30,8 @@ TITLE, LINK, PHOTO, PHOTO_NAME = range(4)
 # =========================
 # IMAGE SAVE PATH
 # =========================
-IMAGE_FOLDER = r"\LegendsMALBot\images"
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+IMAGE_FOLDER = PROJECT_ROOT / "assets" / "images"
 
 # Create folder automatically
 os.makedirs(IMAGE_FOLDER, exist_ok=True)
@@ -244,8 +247,7 @@ async def get_photo_name(
         return ConversationHandler.END
 
     # Full save path
-    save_path = os.path.join(
-        IMAGE_FOLDER,
+    save_path = IMAGE_FOLDER / (
         photo_name
     )
 
@@ -266,9 +268,7 @@ async def get_photo_name(
         )
 
         # Download locally
-        await tg_file.download_to_drive(
-            save_path
-        )
+        await tg_file.download_to_drive(str(save_path))
 
     except Exception as e:
 
@@ -282,16 +282,23 @@ async def get_photo_name(
         return ConversationHandler.END
 
     # Database image path
-    db_photo_path = f"images/{photo_name}"
+    db_photo_path = f"assets/images/{photo_name}"
 
     # Save anime to database
-    add_anime(
-        title=title,
-        link=link,
-        photo=db_photo_path,
-        photo_file_id=photo_file_id,
-        
-    )
+    try:
+        add_anime(
+            title=title,
+            link=link,
+            photo=db_photo_path,
+            photo_file_id=photo_file_id,
+        )
+    except sqlite3.Error:
+        await update.message.reply_text(
+            "❌ Failed to add anime to the database. Please check the bot logs."
+        )
+        if context.user_data:
+            context.user_data.clear()
+        return ConversationHandler.END
 
     await update.message.reply_text(
         f"""

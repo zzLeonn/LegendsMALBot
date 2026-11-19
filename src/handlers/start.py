@@ -76,7 +76,11 @@ https://t.me/+dKZL1b8ZWMU5ZjBl
         keyboard
     )
 
-    with open("images/start_banner.jpg", "rb") as photo:
+    from pathlib import Path
+
+    banner_path = Path(__file__).resolve().parents[2] / "assets" / "images" / "start_banner.jpg"
+
+    with open(banner_path, "rb") as photo:
 
         await update.message.reply_photo(
             photo=photo,
